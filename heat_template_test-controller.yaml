@@ -1,0 +1,46 @@
+heat_template_version: 2013-05-23
+description: version 2017-09-01 created by HOT Generator at Mon, 16 Sep 2019 08:11:58 GMT.
+resources:
+  Volume_1:
+    type: OS::Cinder::Volume
+    properties:
+      name: test-controller-volume
+      size: 400
+      volume_type: 5dbdcd95-3150-4c75-9ccc-aa01f0849add
+      availability_zone: nova
+
+  KeyPair_1:
+    type: OS::Nova::KeyPair
+    properties:
+      save_private_key: true
+      name: infra-key
+
+  Server_1: 
+    type: OS::Nova::Server
+    properties: 
+      name: test-controller
+      #flavor: m1.xlarge
+      flavor: m1.small
+      image: 6e3764a2-401d-42b4-80d5-b0adceb2ec95
+      availability_zone: nova
+      networks:
+        - network: AdminNetwork2
+      key_name: { get_resource: KeyPair_1 }
+    depends_on:
+      - KeyPair_1
+      - Volume_1
+
+  DB_Volume_att:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      instance_uuid: { get_resource:  Server_1 }
+      volume_id: { get_resource:  Volume_1 }
+    depends_on:
+      - Server_1
+      - Volume_1
+
+outputs:
+
+  private_key:
+    description: The private key to access instance (you need to format to get work properly)
+    value: { get_attr: [KeyPair_1, private_key] }
